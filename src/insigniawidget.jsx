@@ -21,33 +21,40 @@ export default function InsigniaWidget() {
   const [estado, setEstado] = useState("Cargando insignia...");
 
   useEffect(() => {
-    ZOHO.CREATOR.init().then(() => {
-      const fecha = new Date();
-      const mes = fecha.getMonth() + 1;
-      const year = fecha.getFullYear();
+    if (window.ZOHO) {
+      window.ZOHO.CREATOR.init().then(() => {
+        const fecha = new Date();
+        const mes = fecha.getMonth() + 1;
+        const year = fecha.getFullYear();
 
-      ZOHO.CREATOR.API.getAllRecords({
-        report_name: "Auditor_a_Report", // Cambia por el nombre real del informe publicado
-        criteria: `(month(Added_Time) == ${mes}) && (year(Added_Time) == ${year})`,
-        page: 1,
-        pageSize: 1,
-      }).then((response) => {
-        const registro = response.data?.[0];
-        if (registro?.Insignia_mes) {
-          const data = insignias[registro.Insignia_mes];
-          if (data) {
-            setInsignia(data);
-          } else {
-            setEstado("Insignia desconocida.");
-          }
-        } else {
-          setEstado("No se encontró una auditoría para este mes.");
-        }
-      }).catch((error) => {
-        console.error("Error al consultar Zoho:", error);
-        setEstado("Error al cargar los datos.");
+        window.ZOHO.CREATOR.API.getAllRecords({
+          report_name: "Auditor_a_Report", // Cambia por el nombre real del informe publicado
+          criteria: `(month(Added_Time) == ${mes}) && (year(Added_Time) == ${year})`,
+          page: 1,
+          pageSize: 1,
+        })
+          .then((response) => {
+            const registro = response.data?.[0];
+            if (registro?.Insignia_mes) {
+              const data = insignias[registro.Insignia_mes];
+              if (data) {
+                setInsignia(data);
+              } else {
+                setEstado("Insignia desconocida.");
+              }
+            } else {
+              setEstado("No se encontró una auditoría para este mes.");
+            }
+          })
+          .catch((error) => {
+            console.error("Error al consultar Zoho:", error);
+            setEstado("Error al cargar los datos.");
+          });
       });
-    });
+    } else {
+      console.error("ZOHO no está definido. Asegúrate de que el script se haya cargado.");
+      setEstado("Error: ZOHO no está disponible.");
+    }
   }, []);
 
   return (
